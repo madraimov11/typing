@@ -1,0 +1,178 @@
+<style>
+  .tz-profile {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+  }
+  .tz-profile-trigger {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    padding: 5px 11px 5px 6px;
+    border: 1px solid rgba(255,255,255,.14);
+    border-radius: 999px;
+    color: #f3f5fa;
+    background: rgba(18,21,40,.72);
+    font: inherit;
+    cursor: pointer;
+  }
+  .tz-profile-trigger:hover { border-color: rgba(154,244,255,.55); }
+  .tz-profile-avatar {
+    display: grid;
+    width: 34px;
+    height: 34px;
+    flex: 0 0 34px;
+    place-items: center;
+    overflow: hidden;
+    border: 1px solid rgba(154,244,255,.35);
+    border-radius: 50%;
+    background: #222744;
+    font-size: 19px;
+  }
+  .tz-profile-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  .tz-profile-name {
+    max-width: 130px;
+    overflow: hidden;
+    font-size: 12px;
+    font-weight: 750;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .tz-profile-dialog {
+    width: min(440px, calc(100% - 28px));
+    max-height: min(90vh, 720px);
+    padding: 0;
+    overflow: auto;
+    border: 1px solid rgba(151,139,255,.38);
+    border-radius: 22px;
+    color: #f3f5fa;
+    background: linear-gradient(145deg, #191b37, #101326);
+    box-shadow: 0 25px 90px rgba(0,0,0,.65);
+  }
+  .tz-profile-dialog::backdrop { background: rgba(4,5,14,.78); backdrop-filter: blur(7px); }
+  .tz-profile-content { padding: 25px; }
+  .tz-profile-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
+  .tz-profile-heading h2 { margin: 0 0 5px; font-size: 22px; }
+  .tz-profile-heading p { margin: 0; color: #a4a8c3; font-size: 13px; }
+  .tz-profile-close {
+    width: 34px;
+    height: 34px;
+    border: 1px solid rgba(255,255,255,.14);
+    border-radius: 10px;
+    color: #d3d6e8;
+    background: #222540;
+    font-size: 19px;
+    cursor: pointer;
+  }
+  .tz-profile-close[hidden] { display: none; }
+  .tz-profile-preview {
+    display: grid;
+    width: 92px;
+    height: 92px;
+    margin: 22px auto 17px;
+    place-items: center;
+    overflow: hidden;
+    border: 2px solid rgba(154,244,255,.5);
+    border-radius: 30px;
+    background: linear-gradient(145deg, #282452, #173044);
+    box-shadow: 0 0 28px rgba(140,124,255,.25);
+    font-size: 48px;
+  }
+  .tz-profile-preview img { width: 100%; height: 100%; object-fit: cover; }
+  .tz-profile-label { display: block; margin: 17px 0 7px; color: #a4a8c3; font-size: 12px; font-weight: 650; }
+  .tz-profile-name-input {
+    width: 100%;
+    padding: 12px 13px;
+    border: 1px solid rgba(140,124,255,.3);
+    border-radius: 11px;
+    outline: none;
+    color: #fff;
+    background: #0d1022;
+    font: inherit;
+  }
+  .tz-profile-name-input:focus { border-color: #9af4ff; }
+  .tz-profile-avatars { display: flex; flex-wrap: wrap; gap: 8px; }
+  .tz-profile-emoji {
+    display: grid;
+    width: 42px;
+    height: 42px;
+    place-items: center;
+    border: 1px solid rgba(255,255,255,.12);
+    border-radius: 12px;
+    background: #20233d;
+    font-size: 22px;
+    cursor: pointer;
+  }
+  .tz-profile-emoji.active { border-color: #9af4ff; background: #253952; box-shadow: 0 0 12px rgba(154,244,255,.16); }
+  .tz-profile-upload {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 12px;
+    padding: 9px 11px;
+    border: 1px solid rgba(151,139,255,.3);
+    border-radius: 10px;
+    color: #d6d2ff;
+    background: #20233d;
+    font-size: 12px;
+    font-weight: 650;
+    cursor: pointer;
+  }
+  .tz-profile-upload input { width: 1px; height: 1px; position: absolute; overflow: hidden; clip: rect(0,0,0,0); }
+  .tz-profile-status { min-height: 20px; margin-top: 10px; color: #ff91a9; font-size: 12px; }
+  .tz-profile-save {
+    width: 100%;
+    min-height: 44px;
+    margin-top: 8px;
+    border: 0;
+    border-radius: 11px;
+    color: #fff;
+    background: linear-gradient(110deg, #765fe8, #5945c9);
+    font: inherit;
+    font-size: 13px;
+    font-weight: 800;
+    cursor: pointer;
+  }
+  .tz-profile-save:hover { filter: brightness(1.13); }
+  .tz-profile-records {
+    margin-top: 21px;
+    padding-top: 17px;
+    border-top: 1px solid rgba(151,139,255,.2);
+  }
+  .tz-profile-records h3 { margin: 0 0 12px; font-size: 15px; }
+  .tz-profile-summary { display: grid; grid-template-columns: repeat(3, 1fr); gap: 7px; }
+  .tz-profile-stat {
+    padding: 9px 7px;
+    border: 1px solid rgba(151,139,255,.16);
+    border-radius: 10px;
+    background: rgba(15,18,35,.75);
+    text-align: center;
+  }
+  .tz-profile-stat strong { display: block; color: #9af4ff; font-size: 17px; }
+  .tz-profile-stat span { color: #9298b7; font-size: 10px; }
+  .tz-profile-record-list { display: grid; gap: 7px; max-height: 190px; margin-top: 10px; overflow: auto; }
+  .tz-profile-record {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 9px 10px;
+    border: 1px solid rgba(151,139,255,.12);
+    border-radius: 9px;
+    background: rgba(15,18,35,.55);
+  }
+  .tz-profile-record-title { color: #e7e8f4; font-size: 11px; font-weight: 750; }
+  .tz-profile-record-time { color: #8e95b4; font-size: 10px; }
+  .tz-profile-record-score { color: #9af4ff; font-size: 11px; font-weight: 750; text-align: right; white-space: nowrap; }
+  .tz-profile-empty { color: #9298b7; font-size: 12px; }
+  @media (max-width: 600px) {
+    .tz-profile-name { max-width: 78px; }
+    .tz-profile-trigger { gap: 6px; padding-right: 8px; }
+    .tz-profile-avatar { width: 30px; height: 30px; flex-basis: 30px; }
+    .tz-profile-content { padding: 20px; }
+  }
+</style>

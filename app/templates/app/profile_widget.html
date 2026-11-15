@@ -1,0 +1,271 @@
+<div class="tz-profile">
+  <button class="tz-profile-trigger" id="tzProfileButton" type="button" aria-label="Profilni tahrirlash">
+    <span class="tz-profile-avatar" id="tzProfileButtonAvatar">🐼</span>
+    <span class="tz-profile-name" id="tzProfileButtonName">Profil yaratish</span>
+  </button>
+  <dialog class="tz-profile-dialog" id="tzProfileDialog" aria-labelledby="tzProfileTitle">
+    <div class="tz-profile-content">
+      <div class="tz-profile-heading">
+        <div>
+          <h2 id="tzProfileTitle">Sizning profilingiz</h2>
+          <p>Ismingiz va avataringiz battle’da ko‘rinadi.</p>
+        </div>
+        <button class="tz-profile-close" id="tzProfileClose" type="button" aria-label="Yopish">×</button>
+      </div>
+      <div class="tz-profile-preview" id="tzProfilePreview">🐼</div>
+      <label class="tz-profile-label" for="tzProfileNameInput">Ismingiz</label>
+      <input class="tz-profile-name-input" id="tzProfileNameInput" maxlength="30" autocomplete="nickname" placeholder="Masalan, Ali">
+      <span class="tz-profile-label">Avatar tanlang</span>
+      <div class="tz-profile-avatars" id="tzProfileAvatars" role="group" aria-label="Avatar tanlash">
+        <button class="tz-profile-emoji" type="button" data-avatar="🐼" aria-label="Panda">🐼</button>
+        <button class="tz-profile-emoji" type="button" data-avatar="🦊" aria-label="Tulki">🦊</button>
+        <button class="tz-profile-emoji" type="button" data-avatar="🐯" aria-label="Yo‘lbars">🐯</button>
+        <button class="tz-profile-emoji" type="button" data-avatar="🐸" aria-label="Qurbaqa">🐸</button>
+        <button class="tz-profile-emoji" type="button" data-avatar="🐙" aria-label="Ahtapot">🐙</button>
+        <button class="tz-profile-emoji" type="button" data-avatar="🚀" aria-label="Raketa">🚀</button>
+        <button class="tz-profile-emoji" type="button" data-avatar="⚡" aria-label="Chaqmoq">⚡</button>
+        <button class="tz-profile-emoji" type="button" data-avatar="🌙" aria-label="Oy">🌙</button>
+      </div>
+      <label class="tz-profile-upload">
+        <span>＋ Rasm yuklash</span>
+        <input id="tzProfileFile" type="file" accept="image/png,image/jpeg,image/webp">
+      </label>
+      <div class="tz-profile-status" id="tzProfileStatus" aria-live="polite"></div>
+      <button class="tz-profile-save" id="tzProfileSave" type="button">Profilni saqlash</button>
+      <section class="tz-profile-records" aria-labelledby="tzProfileRecordsTitle">
+        <h3 id="tzProfileRecordsTitle">Mening rekordlarim</h3>
+        <div class="tz-profile-summary" id="tzProfileSummary"></div>
+        <div class="tz-profile-record-list" id="tzProfileRecordList"></div>
+      </section>
+    </div>
+  </dialog>
+</div>
+<script>
+  (function () {
+    const storageKey = 'tezyoz-profile';
+    const dialog = document.getElementById('tzProfileDialog');
+    const nameInput = document.getElementById('tzProfileNameInput');
+    const preview = document.getElementById('tzProfilePreview');
+    const status = document.getElementById('tzProfileStatus');
+    const closeButton = document.getElementById('tzProfileClose');
+    const summary = document.getElementById('tzProfileSummary');
+    const recordList = document.getElementById('tzProfileRecordList');
+    let selectedAvatar = '🐼';
+
+    function getProfile() {
+      try {
+        const stored = localStorage.getItem(storageKey);
+        if (!stored) return null;
+        const profile = JSON.parse(stored);
+        if (!profile || typeof profile.name !== 'string' || typeof profile.avatar !== 'string') return null;
+        return {
+          name: profile.name,
+          avatar: profile.avatar,
+          records: Array.isArray(profile.records) ? profile.records : []
+        };
+      } catch (error) {
+        console.error('Profilni o‘qishda xatolik:', error);
+        return null;
+      }
+    }
+
+    function showAvatar(element, avatar) {
+      element.replaceChildren();
+      if (avatar.indexOf('data:image/') === 0) {
+        const image = document.createElement('img');
+        image.src = avatar;
+        image.alt = 'Profil avatari';
+        element.appendChild(image);
+      } else {
+        element.textContent = avatar;
+      }
+    }
+
+    function refreshButton(profile) {
+      const avatar = profile ? profile.avatar : '🐼';
+      showAvatar(document.getElementById('tzProfileButtonAvatar'), avatar);
+      document.getElementById('tzProfileButtonName').textContent =
+        profile ? profile.name : 'Profil yaratish';
+    }
+
+    function renderRecords(profile) {
+      const records = profile ? profile.records : [];
+      summary.replaceChildren();
+      recordList.replaceChildren();
+      const bestWpm = records.reduce(function (best, record) {
+        return Math.max(best, Number(record.wpm) || 0);
+      }, 0);
+      const averageAccuracy = records.length
+        ? Math.round(records.reduce(function (sum, record) {
+            return sum + (Number(record.accuracy) || 0);
+          }, 0) / records.length)
+        : 0;
+      [
+        ['Eng tez', bestWpm + ' WPM'],
+        ['O‘rtacha aniqlik', averageAccuracy + '%'],
+        ['Mashqlar', records.length]
+      ].forEach(function (item) {
+        const stat = document.createElement('div');
+        stat.className = 'tz-profile-stat';
+        const value = document.createElement('strong');
+        value.textContent = item[1];
+        const label = document.createElement('span');
+        label.textContent = item[0];
+        stat.append(value, label);
+        summary.appendChild(stat);
+      });
+
+      if (!records.length) {
+        const empty = document.createElement('div');
+        empty.className = 'tz-profile-empty';
+        empty.textContent = 'Hali natija yo‘q. Mashq qiling — rekordlaringiz shu yerda saqlanadi.';
+        recordList.appendChild(empty);
+        return;
+      }
+
+      records.slice(0, 10).forEach(function (record) {
+        const item = document.createElement('div');
+        item.className = 'tz-profile-record';
+        const details = document.createElement('div');
+        const title = document.createElement('div');
+        title.className = 'tz-profile-record-title';
+        title.textContent = (record.mode || 'Mashq') + (record.difficulty ? ' · ' + record.difficulty : '');
+        const duration = document.createElement('div');
+        duration.className = 'tz-profile-record-time';
+        duration.textContent = (Number(record.duration_seconds) || 0) + ' soniya';
+        details.append(title, duration);
+        const score = document.createElement('div');
+        score.className = 'tz-profile-record-score';
+        score.textContent = (Number(record.wpm) || 0) + ' WPM · ' + (Number(record.accuracy) || 0) + '%';
+        item.append(details, score);
+        recordList.appendChild(item);
+      });
+    }
+
+    function selectAvatar(avatar) {
+      selectedAvatar = avatar;
+      showAvatar(preview, avatar);
+      document.querySelectorAll('.tz-profile-emoji').forEach(function (button) {
+        button.classList.toggle('active', button.dataset.avatar === avatar);
+      });
+    }
+
+    function openProfile() {
+      const profile = getProfile();
+      nameInput.value = profile ? profile.name : '';
+      closeButton.hidden = !profile;
+      status.textContent = '';
+      selectAvatar(profile ? profile.avatar : '🐼');
+      renderRecords(profile);
+      if (!dialog.open) dialog.showModal();
+      nameInput.focus();
+    }
+
+    document.getElementById('tzProfileButton').addEventListener('click', openProfile);
+    closeButton.addEventListener('click', function () { dialog.close(); });
+    dialog.addEventListener('cancel', function (event) {
+      if (!getProfile()) event.preventDefault();
+    });
+    dialog.addEventListener('click', function (event) {
+      if (event.target === dialog && getProfile()) dialog.close();
+    });
+
+    document.querySelectorAll('.tz-profile-emoji').forEach(function (button) {
+      button.addEventListener('click', function () {
+        document.getElementById('tzProfileFile').value = '';
+        selectAvatar(button.dataset.avatar);
+      });
+    });
+
+    document.getElementById('tzProfileFile').addEventListener('change', function () {
+      const file = this.files && this.files[0];
+      if (!file) return;
+      if (!['image/png', 'image/jpeg', 'image/webp'].includes(file.type) || file.size > 5 * 1024 * 1024) {
+        status.textContent = 'PNG, JPG эсвэл WebP зураг 5MB-аас бага байх ёстой.';
+        this.value = '';
+        return;
+      }
+      const reader = new FileReader();
+      reader.onerror = function () {
+        status.textContent = 'Зургийг уншиж чадсангүй. Дахин оролдоно уу.';
+      };
+      reader.onload = function () {
+        const image = new Image();
+        image.onerror = function () {
+          status.textContent = 'Энэ зургийг нээж чадсангүй.';
+        };
+        image.onload = function () {
+          const canvas = document.createElement('canvas');
+          const size = 192;
+          canvas.width = size;
+          canvas.height = size;
+          const context = canvas.getContext('2d');
+          if (!context) {
+            status.textContent = 'Зураг боловсруулах боломжгүй байна.';
+            return;
+          }
+          const scale = Math.max(size / image.naturalWidth, size / image.naturalHeight);
+          const width = image.naturalWidth * scale;
+          const height = image.naturalHeight * scale;
+          context.drawImage(image, (size - width) / 2, (size - height) / 2, width, height);
+          selectAvatar(canvas.toDataURL('image/jpeg', .82));
+          status.textContent = 'Зураг сонгогдлоо.';
+        };
+        image.src = String(reader.result);
+      };
+      reader.readAsDataURL(file);
+    });
+
+    document.getElementById('tzProfileSave').addEventListener('click', function () {
+      const name = nameInput.value.trim();
+      if (!name) {
+        status.textContent = 'Нэрээ оруулна уу.';
+        nameInput.focus();
+        return;
+      }
+      const previous = getProfile();
+      const profile = {
+        name: name.slice(0, 30),
+        avatar: selectedAvatar,
+        records: previous ? previous.records : []
+      };
+      try {
+        localStorage.setItem(storageKey, JSON.stringify(profile));
+      } catch (error) {
+        status.textContent = 'Профайлыг хадгалж чадсангүй. Өөр зураг сонгоод дахин оролдоно уу.';
+        console.error('Profilni saqlashda xatolik:', error);
+        return;
+      }
+      refreshButton(profile);
+      renderRecords(profile);
+      dialog.close();
+      window.dispatchEvent(new CustomEvent('tezyoz-profile-updated', {detail: profile}));
+    });
+
+    function recordResult(record) {
+      const profile = getProfile();
+      if (!profile) {
+        console.error('Natijani saqlash uchun profil kerak.');
+        return false;
+      }
+      if (record.id && profile.records.some(function (item) { return item.id === record.id; })) return true;
+      profile.records.unshift(record);
+      profile.records = profile.records.slice(0, 50);
+      try {
+        localStorage.setItem(storageKey, JSON.stringify(profile));
+      } catch (error) {
+        console.error('Natijani profilga saqlashda xatolik:', error);
+        return false;
+      }
+      refreshButton(profile);
+      renderRecords(profile);
+      return true;
+    }
+
+    window.TezYozProfile = {get: getProfile, open: openProfile, recordResult: recordResult};
+    const profile = getProfile();
+    refreshButton(profile);
+    renderRecords(profile);
+    if (!getProfile()) window.setTimeout(openProfile, 0);
+  })();
+</script>

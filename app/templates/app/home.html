@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#101522">
+  <title>TezYoz — yozish tezligini sinang</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #101522;
+      --panel: #191f2e;
+      --panel-light: #20283a;
+      --text: #f3f5fa;
+      --muted: #929bb0;
+      --accent: #a4f06b;
+      --accent-dark: #19330f;
+      --border: rgba(255,255,255,.09);
+      --red: #ff777f;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: radial-gradient(ellipse at 50% -20%, #26334b 0, var(--bg) 55%);
+      color: var(--text);
+      font: 15px/1.5 Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+    }
+    button, textarea, select { font: inherit; }
+    button { cursor: pointer; }
+    .page { width: min(100% - 40px, 1040px); margin: 0 auto; padding: 28px 0 54px; }
+    header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 62px; }
+    .brand { display: flex; align-items: center; gap: 11px; font-size: 19px; font-weight: 750; letter-spacing: -.5px; }
+    .brand-mark { display: grid; width: 34px; height: 34px; place-items: center; border-radius: 11px; color: #17220f; background: var(--accent); font-weight: 900; }
+    .header-note { color: var(--muted); font-size: 13px; }
+    .hero { text-align: center; margin-bottom: 35px; }
+    .eyebrow { color: var(--accent); font-size: 12px; font-weight: 750; letter-spacing: 2px; text-transform: uppercase; }
+    h1 { margin: 10px 0 8px; font-size: clamp(32px, 5vw, 48px); letter-spacing: -2px; line-height: 1.12; }
+    .hero p { color: var(--muted); margin: 0; }
+    .battle-cta {
+      display: inline-flex; align-items: center; gap: 8px; margin-top: 21px; padding: 10px 15px;
+      border: 1px solid rgba(164,240,107,.25); border-radius: 10px; color: var(--accent);
+      background: rgba(164,240,107,.08); font-size: 13px; font-weight: 650; text-decoration: none;
+      transition: .18s ease;
+    }
+    .battle-cta:hover { background: rgba(164,240,107,.15); transform: translateY(-1px); }
+    .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 20px; }
+    .stat { min-height: 91px; padding: 15px 19px; border: 1px solid var(--border); border-radius: 15px; background: rgba(25,31,46,.86); }
+    .stat-label { color: var(--muted); font-size: 12px; }
+    .stat-value { margin-top: 5px; font-size: 25px; font-weight: 750; letter-spacing: -.7px; }
+    .stat-value small { color: var(--muted); font-size: 13px; font-weight: 500; letter-spacing: 0; }
+    .workspace { overflow: hidden; border: 1px solid var(--border); border-radius: 20px; background: var(--panel); box-shadow: 0 22px 70px rgba(0,0,0,.2); }
+    .toolbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 15px; padding: 18px 22px; border-bottom: 1px solid var(--border); }
+    .tabs, .levels { display: flex; flex-wrap: wrap; gap: 7px; }
+    .tab, .level, .duration, .reset {
+      border: 1px solid transparent; border-radius: 9px; color: var(--muted); background: transparent;
+      padding: 8px 12px; font-size: 13px; transition: .18s ease;
+    }
+    .tab:hover, .level:hover, .duration:hover, .reset:hover { color: var(--text); background: var(--panel-light); }
+    .tab.active, .level.active { color: var(--accent); border-color: rgba(164,240,107,.2); background: var(--accent-dark); }
+    .controls { display: flex; align-items: center; gap: 10px; }
+    .duration { border-color: var(--border); color: var(--text); outline: none; }
+    .duration option { background: var(--panel); }
+    .reset { border-color: var(--border); color: var(--text); }
+    .content { padding: 23px 24px 24px; }
+    .level-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 18px; }
+    .section-label { color: var(--muted); font-size: 12px; font-weight: 650; }
+    .custom-box { margin: 0 0 17px; }
+    .custom-box[hidden] { display: none; }
+    .custom-box label { display: block; margin-bottom: 8px; color: var(--muted); font-size: 12px; }
+    .custom-input {
+      width: 100%; min-height: 80px; resize: vertical; padding: 12px 14px;
+      border: 1px solid var(--border); border-radius: 11px; outline: none;
+      color: var(--text); background: #131927;
+    }
+    .custom-input:focus, .typing-input:focus { border-color: rgba(164,240,107,.55); }
+    .passage {
+      min-height: 150px; padding: 20px; border: 1px solid var(--border); border-radius: 13px;
+      background: #141a27; color: #7d879c; font-size: clamp(17px, 2.2vw, 21px);
+      line-height: 1.9; letter-spacing: .15px;
+    }
+    .passage .correct { color: var(--accent); }
+    .passage .incorrect { color: var(--red); background: rgba(255,119,127,.13); border-radius: 3px; }
+    .passage .current { border-left: 2px solid var(--accent); margin-left: -2px; }
+    .typing-input {
+      display: block; width: 100%; min-height: 104px; margin-top: 12px; padding: 14px 16px;
+      resize: vertical; border: 1px solid var(--border); border-radius: 12px; outline: none;
+      color: var(--text); background: #131927; font-size: 15px; line-height: 1.6;
+    }
+    .typing-input:disabled { opacity: .63; cursor: not-allowed; }
+    .footer-row { display: flex; align-items: center; justify-content: space-between; gap: 14px; margin-top: 13px; }
+    .hint, .message { color: var(--muted); font-size: 12px; }
+    .message { color: var(--accent); text-align: right; }
+    .progress { height: 4px; margin-top: 17px; overflow: hidden; border-radius: 10px; background: var(--panel-light); }
+    .progress-bar { width: 0; height: 100%; border-radius: inherit; background: var(--accent); transition: width .12s linear; }
+    .result {
+      display: none; margin-top: 20px; padding: 18px 20px; border: 1px solid rgba(164,240,107,.2);
+      border-radius: 13px; background: rgba(164,240,107,.06);
+    }
+    .result.show { display: flex; justify-content: space-between; align-items: center; gap: 16px; }
+    .result strong { font-size: 17px; }
+    .result span { color: var(--muted); font-size: 13px; }
+    .result-wpm { color: var(--accent) !important; font-size: 24px !important; font-weight: 750; white-space: nowrap; }
+    @media (max-width: 650px) {
+      .page { width: min(100% - 24px, 1040px); padding-top: 18px; }
+      header { margin-bottom: 43px; }
+      .header-note { display: none; }
+      .stats { grid-template-columns: repeat(2, 1fr); gap: 9px; }
+      .stat { min-height: 78px; padding: 12px 14px; }
+      .stat-value { font-size: 22px; }
+      .toolbar { align-items: flex-start; padding: 14px; }
+      .controls { width: 100%; justify-content: space-between; }
+      .content { padding: 17px 14px 16px; }
+      .level-row { align-items: flex-start; flex-direction: column; }
+      .passage { min-height: 170px; padding: 14px; }
+      .result.show { align-items: flex-start; flex-direction: column; }
+    }
+  </style>
+  {% include 'app/profile_styles.html' %}
+</head>
+<body>
+  <main class="page">
+    <header>
+      <div class="brand"><span class="brand-mark">T</span> TezYoz</div>
+      <div class="header-note">Har kuni mashq qiling. Tezroq va aniqroq yozing.</div>
+      {% include 'app/profile_widget.html' %}
+    </header>
+
+    <section class="hero">
+      <div class="eyebrow">Yozish mahoratingizni sinang</div>
+      <h1>Barmoqlaringiz qanchalik tez?</h1>
+      <p>Matnni imkon qadar tez va xatosiz yozing.</p>
+      <a class="battle-cta" href="{% url 'battle_lobby' %}">Do‘stlar bilan battle <span aria-hidden="true">→</span></a>
+    </section>
+
+    <section class="stats" aria-label="Mashq natijalari">
+      <div class="stat"><div class="stat-label">Tezlik</div><div class="stat-value" id="wpm">0 <small>WPM</small></div></div>
+      <div class="stat"><div class="stat-label">Aniqlik</div><div class="stat-value" id="accuracy">100<small>%</small></div></div>
+      <div class="stat"><div class="stat-label">Vaqt</div><div class="stat-value" id="time">30 <small>soniya</small></div></div>
+      <div class="stat"><div class="stat-label">To‘g‘ri belgilar</div><div class="stat-value" id="characters">0</div></div>
+    </section>
+
+    <section class="workspace">
+      <div class="toolbar">
+        <div class="tabs" role="tablist" aria-label="Matn turi">
+          <button class="tab active" id="presetTab" type="button" role="tab" aria-selected="true">Tayyor matnlar</button>
+          <button class="tab" id="customTab" type="button" role="tab" aria-selected="false">O‘z matnim</button>
+        </div>
+        <div class="controls">
+          <select class="duration" id="duration" aria-label="Mashq davomiyligi">
+            <option value="15">15 soniya</option>
+            <option value="30" selected>30 soniya</option>
+            <option value="60">60 soniya</option>
+          </select>
+          <button class="reset" id="reset" type="button">Qayta boshlash</button>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="level-row" id="levelRow">
+          <span class="section-label">Qiyinlik darajasi</span>
+          <div class="levels" role="group" aria-label="Qiyinlik darajasi">
+            <button class="level active" type="button" data-level="easy">Oson</button>
+            <button class="level" type="button" data-level="medium">O‘rta</button>
+            <button class="level" type="button" data-level="hard">Qiyin</button>
+          </div>
+        </div>
+        <div class="custom-box" id="customBox" hidden>
+          <label for="customText">Mashq qilmoqchi bo‘lgan matningizni kiriting</label>
+          <textarea class="custom-input" id="customText" placeholder="O‘zingiz istagan matnni shu yerga yozing yoki joylang..."></textarea>
+        </div>
+        <div class="passage" id="passage" aria-label="Mashq uchun matn"></div>
+        <textarea class="typing-input" id="typingInput" placeholder="Mashqni boshlash uchun shu yerga yozishni boshlang..." aria-label="Matnni shu yerga yozing" spellcheck="false" autocapitalize="off" autocomplete="off"></textarea>
+        <div class="footer-row">
+          <span class="hint" id="hint">Vaqt birinchi harfni yozganingizda boshlanadi.</span>
+          <span class="message" id="message" aria-live="polite"></span>
+        </div>
+        <div class="progress" aria-hidden="true"><div class="progress-bar" id="progressBar"></div></div>
+        <div class="result" id="result" role="status">
+          <div><strong>Mashq yakunlandi!</strong><br><span id="resultDetails"></span></div>
+          <span class="result-wpm" id="resultWpm"></span>
+        </div>
+      </div>
+    </section>
+  </main>
+  <script>
+    const passages = {
+      easy: [
+        "Har kuni ozgina mashq qilish katta natijalarga olib keladi. O'zingizga ishoning va oldinga intiling.",
+        "Bugun yangi kun. Yaxshi kayfiyat bilan boshlang va har bir ishni quvonch bilan bajaring."
+      ],
+      medium: [
+        "Tez yozishni o'rganish uchun klaviaturaga qaramasdan mashq qiling. Avval aniqlikka, keyin esa tezlikka e'tibor bering.",
+        "Muvaffaqiyat birdaniga kelmaydi. U sabr, muntazam mehnat va o'z ustida tinimsiz ishlash natijasidir."
+      ],
+      hard: [
+        "Dasturlash, muhandislik va ijodkorlik - diqqatni jamlash, murakkab muammolarni tahlil qilish hamda izchil yechim topishni talab etadi.",
+        "\"Vaqtni qadrlagan inson imkoniyatlarni boy bermaydi\", - degan edi donishmandlardan biri. Har bir daqiqadan unumli foydalaning!"
+      ]
+    };
+
+    const passageElement = document.getElementById('passage');
+    const typingInput = document.getElementById('typingInput');
+    const durationSelect = document.getElementById('duration');
+    const customText = document.getElementById('customText');
+    const customBox = document.getElementById('customBox');
+    const message = document.getElementById('message');
+    const result = document.getElementById('result');
+    let target = '';
+    let currentLevel = 'easy';
+    let mode = 'preset';
+    let startedAt = null;
+    let timerId = null;
+    let finished = false;
+    let remaining = Number(durationSelect.value);
+
+    function normalizeKeyboardText(value) {
+      return value
+        .replace(/[‘’‚‛ʻʼ]/g, "'")
+        .replace(/[“”«»]/g, '"')
+        .replace(/[‐‑‒–—−]/g, '-')
+        .replace(/…/g, '...');
+    }
+
+    function normalizeCustomText() {
+      const original = customText.value;
+      const selectionStart = customText.selectionStart;
+      const selectionEnd = customText.selectionEnd;
+      const normalized = normalizeKeyboardText(original);
+      if (normalized !== original) {
+        customText.value = normalized;
+        customText.setSelectionRange(
+          normalizeKeyboardText(original.slice(0, selectionStart)).length,
+          normalizeKeyboardText(original.slice(0, selectionEnd)).length
+        );
+      }
+      return normalized.trim();
+    }
+
+    function renderPassage() {
+      passageElement.replaceChildren();
+      Array.from(target).forEach(function (character, index) {
+        const span = document.createElement('span');
+        span.textContent = character;
+        if (index === 0) span.classList.add('current');
+        passageElement.appendChild(span);
+      });
+    }
+
+    function choosePassage() {
+      const options = passages[currentLevel];
+      target = options[Math.floor(Math.random() * options.length)];
+      renderPassage();
+    }
+
+    function resetTest(keepTarget) {
+      clearInterval(timerId);
+      timerId = null;
+      startedAt = null;
+      finished = false;
+      remaining = Number(durationSelect.value);
+      typingInput.value = '';
+      typingInput.disabled = false;
+      message.textContent = '';
+      result.classList.remove('show');
+      document.getElementById('wpm').innerHTML = '0 <small>WPM</small>';
+      document.getElementById('accuracy').innerHTML = '100<small>%</small>';
+      document.getElementById('time').innerHTML = remaining + ' <small>soniya</small>';
+      document.getElementById('characters').textContent = '0';
+      document.getElementById('progressBar').style.width = '0%';
+      document.getElementById('hint').textContent = 'Vaqt birinchi harfni yozganingizda boshlanadi.';
+      if (!keepTarget) {
+        if (mode === 'custom') {
+          target = normalizeCustomText();
+          renderPassage();
+        } else {
+          choosePassage();
+        }
+      }
+    }
+
+    function finishTest() {
+      if (finished) return;
+      finished = true;
+      clearInterval(timerId);
+      timerId = null;
+      typingInput.disabled = true;
+      const elapsed = startedAt ? Math.max((Date.now() - startedAt) / 1000, 1) : 1;
+      const typed = typingInput.value;
+      let correct = 0;
+      for (let i = 0; i < Math.min(typed.length, target.length); i++) {
+        if (typed[i] === target[i]) correct++;
+      }
+      const wpm = Math.round((correct / 5) / (elapsed / 60));
+      const accuracy = typed.length ? Math.round((correct / typed.length) * 100) : 100;
+      const saved = window.TezYozProfile.recordResult({
+        id: 'solo-' + Date.now() + '-' + Math.random().toString(36).slice(2),
+        mode: 'Mashq',
+        difficulty: {easy: 'Oson', medium: 'O‘rta', hard: 'Qiyin'}[currentLevel],
+        wpm: wpm,
+        accuracy: accuracy,
+        duration_seconds: Math.round(elapsed),
+        completed_at: new Date().toISOString()
+      });
+      document.getElementById('resultDetails').textContent =
+        correct + ' ta to‘g‘ri belgi · ' + accuracy + '% aniqlik';
+      document.getElementById('resultWpm').textContent = wpm + ' WPM';
+      result.classList.add('show');
+      document.getElementById('hint').textContent = saved
+        ? 'Natijangiz profilga saqlandi. Yana bir marta urinib ko‘ring!'
+        : 'Natijangiz tayyor, lekin profilga saqlanmadi.';
+    }
+
+    function updateTest() {
+      const typed = typingInput.value;
+      const spans = passageElement.children;
+      let correct = 0;
+      for (let i = 0; i < spans.length; i++) {
+        spans[i].classList.remove('correct', 'incorrect', 'current');
+        if (i < typed.length) {
+          if (typed[i] === target[i]) {
+            spans[i].classList.add('correct');
+            correct++;
+          } else {
+            spans[i].classList.add('incorrect');
+          }
+        } else if (i === typed.length) {
+          spans[i].classList.add('current');
+        }
+      }
+      const accuracy = typed.length ? Math.round((correct / typed.length) * 100) : 100;
+      const elapsed = startedAt ? Math.max((Date.now() - startedAt) / 1000, 1) : 0;
+      const wpm = elapsed ? Math.round((correct / 5) / (elapsed / 60)) : 0;
+      document.getElementById('wpm').innerHTML = wpm + ' <small>WPM</small>';
+      document.getElementById('accuracy').innerHTML = accuracy + '<small>%</small>';
+      document.getElementById('characters').textContent = correct;
+      document.getElementById('progressBar').style.width =
+        Math.min((typed.length / target.length) * 100, 100) + '%';
+      if (typed.length >= target.length) finishTest();
+    }
+
+    document.querySelectorAll('.level').forEach(function (button) {
+      button.addEventListener('click', function () {
+        currentLevel = button.dataset.level;
+        document.querySelectorAll('.level').forEach(function (item) {
+          item.classList.toggle('active', item === button);
+        });
+        resetTest(false);
+      });
+    });
+
+    document.getElementById('presetTab').addEventListener('click', function () {
+      mode = 'preset';
+      this.classList.add('active');
+      this.setAttribute('aria-selected', 'true');
+      document.getElementById('customTab').classList.remove('active');
+      document.getElementById('customTab').setAttribute('aria-selected', 'false');
+      customBox.hidden = true;
+      document.getElementById('levelRow').hidden = false;
+      resetTest(false);
+    });
+
+    document.getElementById('customTab').addEventListener('click', function () {
+      mode = 'custom';
+      this.classList.add('active');
+      this.setAttribute('aria-selected', 'true');
+      document.getElementById('presetTab').classList.remove('active');
+      document.getElementById('presetTab').setAttribute('aria-selected', 'false');
+      customBox.hidden = false;
+      document.getElementById('levelRow').hidden = true;
+      target = normalizeCustomText();
+      renderPassage();
+      resetTest(true);
+    });
+
+    customText.addEventListener('input', function () {
+      if (mode !== 'custom' || startedAt) return;
+      target = normalizeCustomText();
+      renderPassage();
+    });
+
+    typingInput.addEventListener('input', function () {
+      if (finished) return;
+      if (mode === 'custom' && !target) {
+        message.textContent = 'Avval mashq matnini kiriting.';
+        typingInput.value = '';
+        return;
+      }
+      message.textContent = '';
+      if (typingInput.value && !startedAt) {
+        startedAt = Date.now();
+        document.getElementById('hint').textContent = 'Diqqat! Vaqt ketmoqda.';
+        timerId = setInterval(function () {
+          const elapsed = Math.floor((Date.now() - startedAt) / 1000);
+          remaining = Math.max(Number(durationSelect.value) - elapsed, 0);
+          document.getElementById('time').innerHTML = remaining + ' <small>soniya</small>';
+          if (remaining <= 0) finishTest();
+        }, 200);
+      }
+      updateTest();
+    });
+
+    durationSelect.addEventListener('change', function () {
+      resetTest(true);
+    });
+    document.getElementById('reset').addEventListener('click', function () {
+      resetTest(false);
+    });
+
+    choosePassage();
+    document.getElementById('time').innerHTML = remaining + ' <small>soniya</small>';
+  </script>
+</body>
+</html>
